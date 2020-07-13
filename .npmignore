@@ -1,0 +1,9 @@
+node_modules
+.DS_Store
+
+build
+doc
+src
+test
+babel.config.js
+tsconfig.json
