@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Example</title>
+    <style>
+        html {
+            font-size: 14px;
+            line-height: 20px;
+        }
+        .spec-name {
+            padding: 10px 0;
+        }
+        .spec-value-button {
+            display: inline-block;
+            min-width: 50px;
+            padding: 4px 10px;
+            margin-right: 10px;
+            background-color: #ffffff;
+            box-shadow: 0 0 2px 2px rgba(0,0,0,0.1);
+            border-radius: 2px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .spec-value-button:hover {
+            background-color: #eeeeee;
+        }
+        .spec-value-button.active {
+            color: #ffffff;
+            background-color: #0099ff;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.min.js"></script>
+    <script src="../dist/spec-manager.js"></script>
+    <script id="spec" type="text/template">
+        <div>
+            <div v-for="(meta, index) in specMetaList" :key="index">
+                <div class="spec-name">{{meta.name}}</div>
+                <div class="spec-value-list">
+                    <span v-for="(value, i) in meta.list"
+                        :key="name"
+                        class="spec-value-button"
+                        :class="{active: specHandler.selected[meta.key] == value}"
+                        @click="onClickSpec(meta.key, value)">
+                        {{value}}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </script>
+    <script>
+        window.onload = () => {
+            const template = document.getElementById('spec').innerText;
+            console.log(template);
+            new Vue({
+                el: '#app',
+                data() {
+                    return {
+                        specs: [
+                            { id: 1, color: '白色', size: 'XXL', quantity: 1 },
+                            { id: 2, color: '黑色', size: 'XL', quantity: 1 },
+                        ],
+                        specHandler: null,
+                    };
+                },
+                computed: {
+                    specMetaList() {
+                        if (!this.specHandler) {
+                            return;
+                        }
+                        return this.specHandler.meta.map((meta) => {
+                            return {
+                                key: meta.key,
+                                name: meta.name,
+                                list: Array.from(meta.list.values()),
+                            };
+                        });
+                    },
+                },
+                methods: {
+                    onClickSpec(key, value) {
+                        if (!this.specHandler) {
+                            return;
+                        }
+                        this.specHandler.toggleSpec(key, value);
+                    },
+                },
+                mounted() {
+                    this.specHandler = new SpecHandler.SpecHandler();
+                    for (let i = 0; i < this.specs.length; i++) {
+                        const spec = this.specs[i];
+                        this.specHandler.addSpecQuantity('color', spec.color, spec.quantity);
+                        this.specHandler.addSpecQuantity('size', spec.size, spec.quantity);
+                    }
+                    this.specHandler.addMeta('color', '颜色', Object.keys(this.specHandler.map.color));
+                    this.specHandler.addMeta('size', '尺码', Object.keys(this.specHandler.map.size));
+                    for (let i = 0; i < this.specs.length; i++) {
+                        const spec = this.specs[i];
+                        this.specHandler.storeSpecMap(spec);
+                        this.specHandler.buildLine(spec);
+                    }
+                },
+                template,
+            });
+        }
+    </script>
+</body>
+</html>

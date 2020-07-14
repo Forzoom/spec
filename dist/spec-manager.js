@@ -1,7 +1,7 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('core-js/modules/es.array.filter'), require('core-js/modules/es.array.for-each'), require('core-js/modules/es.array.iterator'), require('core-js/modules/es.array.join'), require('core-js/modules/es.array.map'), require('core-js/modules/es.object.assign'), require('core-js/modules/es.object.entries'), require('core-js/modules/es.object.to-string'), require('core-js/modules/es.set'), require('core-js/modules/es.string.iterator'), require('core-js/modules/web.dom-collections.for-each'), require('core-js/modules/web.dom-collections.iterator')) :
   typeof define === 'function' && define.amd ? define(['exports', 'core-js/modules/es.array.filter', 'core-js/modules/es.array.for-each', 'core-js/modules/es.array.iterator', 'core-js/modules/es.array.join', 'core-js/modules/es.array.map', 'core-js/modules/es.object.assign', 'core-js/modules/es.object.entries', 'core-js/modules/es.object.to-string', 'core-js/modules/es.set', 'core-js/modules/es.string.iterator', 'core-js/modules/web.dom-collections.for-each', 'core-js/modules/web.dom-collections.iterator'], factory) :
-  (global = global || self, factory(global.LargeList = {}));
+  (global = global || self, factory(global.SpecHandler = {}));
 }(this, (function (exports) { 'use strict';
 
   function _classCallCheck(instance, Constructor) {
@@ -190,35 +190,21 @@
 
       _defineProperty(this, "options", void 0);
 
-      _defineProperty(this, "map", void 0);
+      _defineProperty(this, "map", {});
 
-      _defineProperty(this, "lineMap", void 0);
+      _defineProperty(this, "lineMap", {});
 
-      _defineProperty(this, "specMap", void 0);
+      _defineProperty(this, "specMap", {});
 
       _defineProperty(this, "meta", []);
 
-      _defineProperty(this, "metaMap", void 0);
+      _defineProperty(this, "metaMap", {});
 
-      _defineProperty(this, "selected", void 0);
+      _defineProperty(this, "selected", {});
 
       this.options = Object.assign({
         minQuantity: 1
       }, options);
-      this.map = {};
-      /** 允许连接逻辑 */
-
-      this.lineMap = {};
-      /** 当所有的规格都存在选中时，并且key的顺序一定情况下 */
-
-      this.specMap = {};
-      /** 所有规格列表 */
-
-      this.meta = [];
-      this.metaMap = {};
-      /** 所选择的规格 */
-
-      this.selected = {};
     }
     /**
      * 添加规格原始数据
@@ -232,9 +218,10 @@
     _createClass(SpecHandler, [{
       key: "addMeta",
       value: function addMeta(specKey, specName, list) {
-        var self = this;
+        var self = this; // 已经添加过了
 
         if (self.metaMap[specKey] >= 0) {
+          // todo: warn
           return;
         }
 
@@ -261,15 +248,16 @@
       }
       /**
        * 为规格添加库存
-       * @param specKey 规格key
-       * @param specName 规格
-       * @param quantity 数量
+       *
+       * @param {SpecManager.SpecKey} specKey 规格key
+       * @param {SpecManager.SpecName} specName 规格
+       * @param {number} quantity 数量
        */
 
     }, {
       key: "addSpecQuantity",
       value: function addSpecQuantity(specKey, specName, quantity) {
-        var map = this.map;
+        var map = this.map; // todo: 考虑是否要求先添加meta
 
         if (!map[specKey]) {
           map[specKey] = {};
@@ -313,6 +301,7 @@
       }
       /**
        * 保存在specMap中
+       *
        * @param spec 规格数据
        */
 
@@ -322,10 +311,9 @@
         var keys = this.meta.map(function (item) {
           return item.key;
         });
-        console.log('target5', keys); // @ts-ignore
-
+        console.log('target5', keys);
         this.specMap[keys.map(function (key) {
-          return spec.param[key];
+          return spec[key];
         }).join('_')] = spec;
       }
       /**

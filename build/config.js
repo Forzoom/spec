@@ -47,7 +47,7 @@ module.exports = exports = [
         input: './src/index.ts',
         output: {
             file: './dist/spec-manager.js',
-            name: 'LargeList',
+            name: 'SpecHandler',
             format: 'umd',
         },
         external: [ 'core-js' ],
@@ -66,7 +66,7 @@ module.exports = exports = [
         input: './src/index.ts',
         output: {
             file: './dist/spec-manager.min.js',
-            name: 'LargeList',
+            name: 'SpecHandler',
             format: 'umd',
         },
         external: [ 'core-js' ],

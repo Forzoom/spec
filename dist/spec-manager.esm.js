@@ -197,35 +197,21 @@ var SpecHandler = /*#__PURE__*/function () {
 
     _defineProperty(this, "options", void 0);
 
-    _defineProperty(this, "map", void 0);
+    _defineProperty(this, "map", {});
 
-    _defineProperty(this, "lineMap", void 0);
+    _defineProperty(this, "lineMap", {});
 
-    _defineProperty(this, "specMap", void 0);
+    _defineProperty(this, "specMap", {});
 
     _defineProperty(this, "meta", []);
 
-    _defineProperty(this, "metaMap", void 0);
+    _defineProperty(this, "metaMap", {});
 
-    _defineProperty(this, "selected", void 0);
+    _defineProperty(this, "selected", {});
 
     this.options = Object.assign({
       minQuantity: 1
     }, options);
-    this.map = {};
-    /** 允许连接逻辑 */
-
-    this.lineMap = {};
-    /** 当所有的规格都存在选中时，并且key的顺序一定情况下 */
-
-    this.specMap = {};
-    /** 所有规格列表 */
-
-    this.meta = [];
-    this.metaMap = {};
-    /** 所选择的规格 */
-
-    this.selected = {};
   }
   /**
    * 添加规格原始数据
@@ -239,9 +225,10 @@ var SpecHandler = /*#__PURE__*/function () {
   _createClass(SpecHandler, [{
     key: "addMeta",
     value: function addMeta(specKey, specName, list) {
-      var self = this;
+      var self = this; // 已经添加过了
 
       if (self.metaMap[specKey] >= 0) {
+        // todo: warn
         return;
       }
 
@@ -268,15 +255,16 @@ var SpecHandler = /*#__PURE__*/function () {
     }
     /**
      * 为规格添加库存
-     * @param specKey 规格key
-     * @param specName 规格
-     * @param quantity 数量
+     *
+     * @param {SpecManager.SpecKey} specKey 规格key
+     * @param {SpecManager.SpecName} specName 规格
+     * @param {number} quantity 数量
      */
 
   }, {
     key: "addSpecQuantity",
     value: function addSpecQuantity(specKey, specName, quantity) {
-      var map = this.map;
+      var map = this.map; // todo: 考虑是否要求先添加meta
 
       if (!map[specKey]) {
         map[specKey] = {};
@@ -320,6 +308,7 @@ var SpecHandler = /*#__PURE__*/function () {
     }
     /**
      * 保存在specMap中
+     *
      * @param spec 规格数据
      */
 
@@ -329,10 +318,9 @@ var SpecHandler = /*#__PURE__*/function () {
       var keys = this.meta.map(function (item) {
         return item.key;
       });
-      console.log('target5', keys); // @ts-ignore
-
+      console.log('target5', keys);
       this.specMap[keys.map(function (key) {
-        return spec.param[key];
+        return spec[key];
       }).join('_')] = spec;
     }
     /**

@@ -10,13 +10,13 @@ export class SpecHandler<S extends SpecManager.Specification = SpecManager.Speci
         [specKey: string]: {
             [specName: string]: SpecManager.SpecNameEnableInfo
         };
-    }
+    } = {};
     /** 
      * 连线信息
      */
     public lineMap: {
         [specName: string]: boolean;
-    }
+    } = {};
     /**
      * 规格数据
      * 例如:
@@ -26,7 +26,7 @@ export class SpecHandler<S extends SpecManager.Specification = SpecManager.Speci
      */
     public specMap: {
         [specKeyJoin: string]: S;
-    }
+    } = {};
     /** 
      * 规格原始数据
      */
@@ -34,28 +34,18 @@ export class SpecHandler<S extends SpecManager.Specification = SpecManager.Speci
     /**
      * meta数据中key到index的映射
      */
-    public metaMap: { [key: string]: number }
+    public metaMap: { [key: string]: number } = {};
     /**
      * 当前选择的规格
      */
     public selected: {
         [specKey: string]: SpecManager.SpecValue | null;
-    }
+    } = {};
 
-    constructor(options?: Partial<SpecManager.ManagerOptions>) {
+    public constructor(options?: Partial<SpecManager.ManagerOptions>) {
         this.options = Object.assign({
             minQuantity: 1,
         }, options);
-        this.map = {};
-        /** 允许连接逻辑 */
-        this.lineMap = {};
-        /** 当所有的规格都存在选中时，并且key的顺序一定情况下 */
-        this.specMap = {};
-        /** 所有规格列表 */
-        this.meta = [];
-        this.metaMap = {};
-        /** 所选择的规格 */
-        this.selected = {};
     }
 
     /**
@@ -65,9 +55,11 @@ export class SpecHandler<S extends SpecManager.Specification = SpecManager.Speci
      * @param {SpecManager.SpecName} name 规格名
      * @param list 所有规格
      */
-    public addMeta(specKey: SpecManager.SpecKey, specName: SpecManager.SpecName, list: SpecManager.SpecValue[]) {
+    public addMeta(specKey: SpecManager.SpecKey, specName: SpecManager.SpecName, list?: SpecManager.SpecValue[]) {
         const self = this;
+        // 已经添加过了
         if (self.metaMap[specKey] >= 0) {
+            // todo: warn
             return;
         }
 
@@ -95,12 +87,14 @@ export class SpecHandler<S extends SpecManager.Specification = SpecManager.Speci
     }
     /**
      * 为规格添加库存
-     * @param specKey 规格key
-     * @param specName 规格
-     * @param quantity 数量
+     *
+     * @param {SpecManager.SpecKey} specKey 规格key
+     * @param {SpecManager.SpecName} specName 规格
+     * @param {number} quantity 数量
      */
-    public addSpecQuantity(specKey, specName, quantity) {
+    public addSpecQuantity(specKey: SpecManager.SpecKey, specName: SpecManager.SpecName, quantity: number): void {
         const map = this.map;
+        // todo: 考虑是否要求先添加meta
         if (!map[specKey]) {
             map[specKey] = {};
         }
@@ -134,13 +128,12 @@ export class SpecHandler<S extends SpecManager.Specification = SpecManager.Speci
     }
     /**
      * 保存在specMap中
+     *
      * @param spec 规格数据
      */
     public storeSpecMap(spec) {
         const keys = this.meta.map((item) => item.key);
-        console.log('target5', keys);
-        // @ts-ignore
-        this.specMap[keys.map((key) => spec.param[key]).join('_')] = spec;
+        this.specMap[keys.map((key) => spec[key]).join('_')] = spec;
     }
 
     /**
