@@ -17,6 +17,7 @@ declare namespace SpecManager {
 
     /** 配置信息 */
     interface ManagerOptions {
+        /** 当库存数量低于minQuantity时，将不可选择 */
         minQuantity: number | undefined | null;
     }
     /** 包含规格具体数据 */
@@ -40,6 +41,8 @@ declare namespace SpecManager {
      * 规格原始数据
      */
     interface SpecMeta {
+        /** 用来标识唯一性 */
+        id: any;
         /** 规则字段名，例如: color，size */
         key: SpecKey;
         /** 规则名字，例如: 颜色，尺码 */

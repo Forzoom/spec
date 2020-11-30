@@ -2,12 +2,18 @@
   "name": "spec-handler",
   "version": "0.0.1",
   "license": "MIT",
-  "types": "./types",
+  "types": "./types/index.d.ts",
   "scripts": {
     "build": "node build/build.js",
-    "test:unit": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register ./tests/spec/index.ts"
+    "test:unit:ts": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register ./tests/spec/index.ts",
+    "test:unit:js": "mocha ./tests/spec/index.js",
+    "test:unit": "yarn build && yarn test:unit:js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@rollup/plugin-babel": "^5.2.1",
+    "@rollup/plugin-commonjs": "^16.0.0",
+    "@rollup/plugin-node-resolve": "^10.0.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.10.4",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
@@ -16,11 +22,9 @@
     "@types/chai": "^4.2.11",
     "@types/mocha": "^8.0.0",
     "chai": "^4.2.0",
+    "core-js": "^3.8.0",
     "mocha": "^8.0.1",
     "rollup": "^2.21.0",
-    "rollup-plugin-babel": "^4.4.0",
-    "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-uglify": "^6.0.4",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.6"

@@ -1,5 +1,5 @@
-import { expect } from 'chai';
-import { SpecHandler } from '../../src/index';
+const { expect } = require('chai');
+const { SpecHandler } = require('../../dist/spec-manager.cjs.js');
 
 describe('spec handler', () => {
     it('test', () => {

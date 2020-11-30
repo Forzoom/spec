@@ -1,14 +1,22 @@
+function isUndef(v: any): v is (null | undefined) {
+    return v === null || v === undefined;
+}
+
 /**
  * 处理规格选择
+ * 1. 添加所有的meta
+ * 2. 添加spec
+ * 3. 建立line，line的建立依赖于minQuantity
  *
  * <S> 规格类型，例如后端传来的 { color: '红色', size: 'xxl' }
  */
 export class SpecHandler<S extends SpecManager.Specification = SpecManager.Specification> {
     /** 配置信息 */
     public options: SpecManager.ManagerOptions;
+    /** 每个规格的信息 */
     public map: {
         [specKey: string]: {
-            [specName: string]: SpecManager.SpecNameEnableInfo
+            [specValue: string]: SpecManager.SpecNameEnableInfo;
         };
     } = {};
     /** 
@@ -32,15 +40,14 @@ export class SpecHandler<S extends SpecManager.Specification = SpecManager.Speci
      */
     public meta: SpecManager.SpecMeta[] = [];
     /**
-     * meta数据中key到index的映射
-     */
-    public metaMap: { [key: string]: number } = {};
-    /**
      * 当前选择的规格
      */
     public selected: {
         [specKey: string]: SpecManager.SpecValue | null;
     } = {};
+
+    /** meta数据中key到index的映射 */
+    private metaIdSet: Set<any> = new Set();
 
     public constructor(options?: Partial<SpecManager.ManagerOptions>) {
         this.options = Object.assign({
@@ -55,35 +62,49 @@ export class SpecHandler<S extends SpecManager.Specification = SpecManager.Speci
      * @param {SpecManager.SpecName} name 规格名
      * @param list 所有规格
      */
-    public addMeta(specKey: SpecManager.SpecKey, specName: SpecManager.SpecName, list?: SpecManager.SpecValue[]) {
+    public addMeta(meta: SpecManager.SpecMeta | SpecManager.SpecMeta[]) {
+        if (Array.isArray(meta)) {
+            meta.forEach((meta) => {
+                this.addMeta(meta);
+            });
+            return;
+        }
+
         const self = this;
         // 已经添加过了
-        if (self.metaMap[specKey] >= 0) {
+        if (self.metaIdSet.has(meta.id)) {
             // todo: warn
             return;
         }
 
-        self.metaMap[specKey] = self.meta.length;
-        self.meta.push({
-            key: specKey,
-            name: specName,
-            list: new Set(list || []),
-        });
+        self.meta.push(meta);
+        self.metaIdSet.add(meta.id);
 
         // todo: 考虑是否有必要
+        const list = Array.from(meta.list);
         if (list) {
-            list.forEach((specName) => {
-                if (!self.map[specKey][specName]) {
-                    self.map[specKey][specName] = {
-                        quantity: 0,
-                        enable: true,
-                    };
-                }
+            list.forEach((name) => {
+                self.prepareSpecInfo(meta.key, name);
             });
         }
 
         // tip: 帮助vue建立可观测的对象
-        this.selected[specKey] = null;
+        this.selected[meta.key] = null;
+    }
+    /**
+     * 添加spec数据
+     */
+    public addSpec(spec: S, option?: { quantity?: number }) {
+        // 添加quantity
+        if (option && option.quantity) {
+            this.meta.forEach((meta) => {
+                this.addQuantity(meta.key, spec[meta.key], option.quantity);
+            });
+        }
+        // 添加line
+        this.buildLine(spec);
+        // 添加到map中
+        this.storeSpec(spec);
     }
     /**
      * 为规格添加库存
@@ -92,25 +113,14 @@ export class SpecHandler<S extends SpecManager.Specification = SpecManager.Speci
      * @param {SpecManager.SpecName} specName 规格
      * @param {number} quantity 数量
      */
-    public addSpecQuantity(specKey: SpecManager.SpecKey, specName: SpecManager.SpecName, quantity: number): void {
-        const map = this.map;
-        // todo: 考虑是否要求先添加meta
-        if (!map[specKey]) {
-            map[specKey] = {};
-        }
-        if (!map[specKey][specName]) {
-            map[specKey][specName] = {
-                quantity: quantity || 0,
-                enable: true,
-            };
-        } else {
-            map[specKey][specName].quantity += quantity;
-        }
+    public addQuantity(specKey: SpecManager.SpecKey, specName: SpecManager.SpecName, quantity: number): void {
+        this.prepareSpecInfo(specKey, specName);
+        this.map[specKey][specName].quantity += quantity;
     }
     /**
      * 建立line
      */
-    public buildLine(item) {
+    public buildLine(item: any) {
         const keys = this.meta.map((item) => item.key);
         const l = keys.length;
         for (let x = 0; x < l; x++) {
@@ -131,7 +141,7 @@ export class SpecHandler<S extends SpecManager.Specification = SpecManager.Speci
      *
      * @param spec 规格数据
      */
-    public storeSpecMap(spec) {
+    public storeSpec(spec: S) {
         const keys = this.meta.map((item) => item.key);
         this.specMap[keys.map((key) => spec[key]).join('_')] = spec;
     }
@@ -153,7 +163,15 @@ export class SpecHandler<S extends SpecManager.Specification = SpecManager.Speci
         const metaList = this.meta;
         const lineMap = this.lineMap;
         // tip: 不使用isUndef，是为了不引入lib/utils，因为引入会导致单元测试失败
-        const selectedEntries = Object.entries(this.selected).filter((item) => (item[1] !== null && item[1] !== undefined));
+        const selectedEntries: string[][] = [];
+        const keys = Object.keys(this.selected);
+        for (let i = 0, len = keys.length; i < len; i++) {
+            const key = keys[i];
+            const value = this.selected[key];
+            if (!isUndef(value)) {
+                selectedEntries.push([ key, this.selected[key] ]);
+            }
+        }
 
         // 没有选中，全部重置
         for (const meta of metaList) {
@@ -173,7 +191,7 @@ export class SpecHandler<S extends SpecManager.Specification = SpecManager.Speci
     /**
      * 使用spec数据
      */
-    public select(spec) {
+    public select(spec: any) {
         this.meta.forEach((meta) => {
             this.selected[meta.key] = spec[meta.key];
         });
@@ -187,10 +205,22 @@ export class SpecHandler<S extends SpecManager.Specification = SpecManager.Speci
         });
     }
     /**
-     * 获取选中的规格信息
+     * 获取选中的规格
      */
     public getSelectedSpecification() {
         const keys = this.meta.map((item) => item.key);
         return this.specMap[keys.map((key) => this.selected[key]).join('_')];
+    }
+
+    private prepareSpecInfo(key: SpecManager.SpecKey, value: SpecManager.SpecValue) {
+        if (!this.map[key]) {
+            this.map[key] = {};
+        }
+        if (!this.map[key][value]) {
+            this.map[key][value] = {
+                quantity: 0,
+                enable: true,
+            };
+        }
     }
 }

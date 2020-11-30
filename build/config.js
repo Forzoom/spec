@@ -1,7 +1,6 @@
-const commonjs = require('rollup-plugin-commonjs');
-const resolve = require('rollup-plugin-node-resolve');
-const babel = require('rollup-plugin-babel');
-const { uglify } = require('rollup-plugin-uglify');
+const commonjs = require('@rollup/plugin-commonjs');
+const resolve = require('@rollup/plugin-node-resolve').default;
+const babel = require('@rollup/plugin-babel').default;
 
 const extensions = [ '.ts', '.js' ];
 
@@ -41,45 +40,6 @@ module.exports = exports = [
                 exclude: 'node_modules/**',
                 extensions,
             }),
-        ],
-    },
-    {
-        input: './src/index.ts',
-        output: {
-            file: './dist/spec-manager.js',
-            name: 'SpecHandler',
-            format: 'umd',
-        },
-        external: [ 'core-js' ],
-        plugins: [
-            resolve({
-                extensions,
-            }),
-            commonjs(),
-            babel({
-                exclude: 'node_modules/**',
-                extensions,
-            }),
-        ],
-    },
-    {
-        input: './src/index.ts',
-        output: {
-            file: './dist/spec-manager.min.js',
-            name: 'SpecHandler',
-            format: 'umd',
-        },
-        external: [ 'core-js' ],
-        plugins: [
-            resolve({
-                extensions,
-            }),
-            commonjs(),
-            babel({
-                exclude: 'node_modules/**',
-                extensions,
-            }),
-            uglify(),
         ],
     },
 ];
